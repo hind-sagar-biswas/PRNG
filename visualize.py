@@ -33,10 +33,8 @@ def main(algo_list: dict):
         chi_stats[key] = []
         rows = fetch_data(key)
         for row in rows:
-            if row["D_STAT"] is not None:
-                ks_stats[key].append(row["D_STAT"])
-            if row["CHI_2_STAT"] is not None:
-                chi_stats[key].append(row["CHI_2_STAT"])
+            ks_stats[key].append(row["D_STAT"])
+            chi_stats[key].append(row["CHI_2_STAT"])
         ks_stats[key] = np.array(ks_stats[key])
         chi_stats[key] = np.array(chi_stats[key])
 
