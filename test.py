@@ -7,11 +7,18 @@ import numpy as np
 import sqlite3 as sq
 from scipy.stats import kstest, chisquare
 
+import dbconn as db
+import visualize as vis
 import algos.hprng as alg
-from dbconn import setup_table, generate_entry, enter_values
 
 ALPHA = 0.05
 N = 1000
+
+algo_list = {
+    "hybrid": alg.hybrid_prng,
+    "mask": alg.mask_prng,
+    "mask_shift": alg.mask_shift_prng,
+}
 
 
 def ks(numbers: list):
@@ -46,27 +53,21 @@ def start_tests(algo_list: dict, conn: sq.Connection):
             print("=" * 50)
             print(f"Testing {key} with m = {m}")
             stats = conduct_test(m, value)
-            stats = generate_entry(stats, key, m, N, ALPHA)
+            stats = db.generate_entry(stats, key, m, N, ALPHA)
             print("Entering values")
-            enter_values(stats, conn)
+            db.enter_values(stats, conn)
             m *= 10
             print("=" * 50)
 
 
 def main():
-    algo_list = {
-        "hybrid": alg.hybrid_prng,
-        "mask": alg.mask_prng,
-        "mask_shift": alg.mask_shift_prng,
-    }
-
     if os.path.exists("test.db"):
         os.remove("test.db")
 
     conn = sq.connect("test.db")
     print("Opened database successfully")
 
-    setup_table(conn)
+    db.setup_table(conn)
     start_tests(algo_list, conn)
 
     conn.close()
@@ -74,3 +75,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    vis.main(algo_list)
