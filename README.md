@@ -4,7 +4,7 @@ This research focuses on the development and evaluation of novel Pseudorandom Nu
 
 Our approach includes the design of PRNGs with distinct mechanisms, such as hybrid models, switch-based generators, and shift-based variations, each aimed at enhancing randomness and mitigating common PRNG flaws. The evaluation is conducted with multithreading support, allowing for efficient parallel testing of multiple algorithms under diverse configurations. Visualization tools are used to analyze the rejections of the null hypothesis, providing a clear comparison of the statistical validity of each algorithm. This research aims to contribute to the field of random number generation by exploring innovative algorithmic designs and assessing their practical applicability through rigorous testing.
 
-In the testing, `HPRNG` [1] has been used as base algorithm. It is used as referrence for performance testing.
+In the testing, `HPRNG` [[1]](https://github.com/hind-sagar-biswas/PRNG#References) has been used as base algorithm. It is used as referrence for performance testing.
 
 ## Setup
 
@@ -98,4 +98,4 @@ This project is licensed under the `MIT` License - see the LICENSE file for deta
 
 ## References
 
-[1] [The Hybrid Pseudo Random Number Generator](https://gvpress.com/journals/IJHIT/vol9_no7/27.pdf) by Tanvir Ahmed and Md. Mahbubur Rahman
+- [1] [The Hybrid Pseudo Random Number Generator](https://gvpress.com/journals/IJHIT/vol9_no7/27.pdf) by Tanvir Ahmed and Md. Mahbubur Rahman
