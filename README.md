@@ -65,7 +65,7 @@ You will be prompted to input:
 
 ## SQLite Database
 
-- The results of the tests are stored in SQLite databases named test_X.db, where X is the thread index.
+- The results of the tests are stored in SQLite databases named `test_X.db`, where `X` is the thread index.
 - The table RandomnessTests includes the following columns:
     - `ALGO`: The name of the algorithm.
     - `M`: The value of m.
