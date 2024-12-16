@@ -1,3 +1,4 @@
+import os
 import sys
 
 sys.path.append("./algos")
@@ -6,7 +7,7 @@ import numpy as np
 import sqlite3 as sq
 from scipy.stats import kstest, chisquare
 
-from algos.hprng import hybrid_prng
+import algos.hprng as alg
 from dbconn import setup_table, generate_entry, enter_values
 
 ALPHA = 0.05
@@ -53,7 +54,14 @@ def start_tests(algo_list: dict, conn: sq.Connection):
 
 
 def main():
-    algo_list = {"hybrid_prng": hybrid_prng}
+    algo_list = {
+        "hybrid": alg.hybrid_prng,
+        "mask": alg.mask_prng,
+        "mask_shift": alg.mask_shift_prng,
+    }
+
+    if os.path.exists("test.db"):
+        os.remove("test.db")
 
     conn = sq.connect("test.db")
     print("Opened database successfully")
