@@ -16,9 +16,13 @@ ALPHA = 0.05
 N = 1000
 
 algo_list = {
-    "hybrid": alg.hybrid_prng,
-    "mask": alg.mask_prng,
-    "mask_shift": alg.mask_shift_prng,
+    "hybrid": alg.hybrid_prng,  # 2nd
+    "switch": alg.switch_prng,  # 1st
+    # "mask": alg.mask_prng,  # Worst Performance
+    # "alt_mask": alg.mask_alt_prng,  # Worst Performance
+    # "mask_shift": alg.mask_shift_prng,  # Performance worse than Alt.
+    # "switch_mask_shift": alg.switch_mask_shift_prng,  # Worst Performance
+    "alt_mask_shift": alg.mask_shift_alt_prng,
 }
 
 
