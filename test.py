@@ -3,6 +3,7 @@ import sys
 
 sys.path.append("./algos")
 
+import threading
 import numpy as np
 import sqlite3 as sq
 from scipy.stats import kstest, chisquare
@@ -37,8 +38,8 @@ def chi(numbers):
     return chi2_stat, p_value, int(p_value < ALPHA)
 
 
-def conduct_test(m: int, algorithm):
-    numbers = algorithm(m, N)
+def conduct_test(m: int, a: int, algorithm):
+    numbers = algorithm(m, N, a)
     return {
         "ks": ks(numbers),
         "chi": chi(numbers),
@@ -46,13 +47,13 @@ def conduct_test(m: int, algorithm):
     }
 
 
-def start_tests(algo_list: dict, conn: sq.Connection):
+def start_tests(algo_list: dict, index: int, conn: sq.Connection):
     for key, value in algo_list.items():
         m = 100
         while m < 1000000000000:
             print("=" * 50)
             print(f"Testing {key} with m = {m}")
-            stats = conduct_test(m, value)
+            stats = conduct_test(m, index, value)
             stats = db.generate_entry(stats, key, m, N, ALPHA)
             print("Entering values")
             db.enter_values(stats, conn)
@@ -60,19 +61,29 @@ def start_tests(algo_list: dict, conn: sq.Connection):
             print("=" * 50)
 
 
-def main():
-    if os.path.exists("test.db"):
-        os.remove("test.db")
+def main(index: int = 0):
+    if os.path.exists(f"test_{index}.db"):
+        os.remove(f"test_{index}.db")
 
-    conn = sq.connect("test.db")
+    conn = sq.connect(f"test_{index}.db")
     print("Opened database successfully")
 
     db.setup_table(conn)
-    start_tests(algo_list, conn)
+    start_tests(algo_list, index, conn)
 
     conn.close()
 
 
 if __name__ == "__main__":
-    main()
-    vis.main(algo_list)
+    only_rejections = bool(int(input("Only Rejections (1 = True, 0 = False): ")))
+    threads = int(input("Number of Threads: "))
+    t = []
+    for i in range(threads):
+        thread = threading.Thread(target=main, args=(i,))
+        thread.start()
+        t.append(thread)
+
+    for thread in t:
+        thread.join()
+    for i in range(threads):
+        vis.main(algo_list, i, only_rejections)

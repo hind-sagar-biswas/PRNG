@@ -1,8 +1,8 @@
 import time
 
 
-def hybrid_prng(m, n):
-    a = 5
+def hybrid_prng(m, n, a):
+    a = 5 * (10**a)
     x = time.time_ns()
     random_numbers = []
     for _ in range(n):
@@ -11,8 +11,8 @@ def hybrid_prng(m, n):
     return random_numbers
 
 
-def mask_prng(m, n):
-    a = 5
+def mask_prng(m, n, a):
+    a = 5 * (10**a)
     x = time.time_ns()
     random_numbers = []
     for _ in range(n):
@@ -21,8 +21,8 @@ def mask_prng(m, n):
     return random_numbers
 
 
-def mask_shift_prng(m, n):
-    a = 5
+def mask_shift_prng(m, n, a):
+    a = 5 * (10**a)
     x = time.time_ns()
     random_numbers = []
     for _ in range(n):
