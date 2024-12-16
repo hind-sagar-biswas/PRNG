@@ -18,6 +18,7 @@ N = 1000
 algo_list = {
     "hybrid": alg.hybrid_prng,  # 2nd
     "switch": alg.switch_prng,  # 1st
+    "switch_shift": alg.switch_shift_prng,
     # "mask": alg.mask_prng,  # Worst Performance
     # "alt_mask": alg.mask_alt_prng,  # Worst Performance
     # "mask_shift": alg.mask_shift_prng,  # Performance worse than Alt.
@@ -79,8 +80,10 @@ def main(index: int = 0):
 
 
 if __name__ == "__main__":
-    only_rejections = bool(int(input("Only Rejections (1 = True, 0 = False): ")))
-    threads = int(input("Number of Threads: "))
+    only_rejections = (
+        True  # bool(int(input("Only Rejections (1 = True, 0 = False): ")))
+    )
+    threads = 10  # int(input("Number of Threads: "))
     t = []
     for i in range(threads):
         thread = threading.Thread(target=main, args=(i,))
