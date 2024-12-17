@@ -7,13 +7,19 @@ import threading
 import numpy as np
 import sqlite3 as sq
 from scipy.stats import kstest, chisquare
+from dotenv import dotenv_values
 
 import dbconn as db
 import visualize as vis
 import algos.hprng as alg
 
-ALPHA = 0.05
-N = 1000
+config = dotenv_values("env.config")
+
+M_MULTIPLIER = int(config["M_MULTIPLIER"])
+M_INITIAL = int(config["M_INITIAL"])
+M_LIMIT = int(config["M_LIMIT"])
+ALPHA = float(config["ALPHA"])
+N = int(config["N"])
 
 algo_list = {
     "hybrid": alg.hybrid_prng,  # 3rd
@@ -54,15 +60,15 @@ def conduct_test(m: int, a: int, algorithm):
 
 def start_tests(algo_list: dict, index: int, conn: sq.Connection):
     for key, value in algo_list.items():
-        m = 100
-        while m < 1000000000000:
+        m = M_INITIAL
+        while m <= M_LIMIT:
             print("=" * 50)
             print(f"Testing {key} with m = {m}")
             stats = conduct_test(m, index, value)
             stats = db.generate_entry(stats, key, m, N, ALPHA)
             print("Entering values")
             db.enter_values(stats, conn)
-            m *= 10
+            m *= M_MULTIPLIER
             print("=" * 50)
 
 
@@ -80,7 +86,6 @@ def main(index: int = 0):
 
 
 if __name__ == "__main__":
-    only_rejections = bool(int(input("Only Rejections (1 = True, 0 = False): ")))
     threads = int(input("Number of Threads: "))
     t = []
     for i in range(threads):
@@ -90,5 +95,13 @@ if __name__ == "__main__":
 
     for thread in t:
         thread.join()
+
+    print("Select to Visualize Data: ")
+    print("\t[1] Statistics")
+    print("\t[2] P Values")
+    print("\t[3] Rejections")
+    print("\t[4] Random Numbers")
+    selected = map(int, input(">> ").split())
+
     for i in range(threads):
-        vis.main(algo_list, i, only_rejections)
+        vis.main(algo_list, i, list(selected))

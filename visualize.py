@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -116,8 +117,28 @@ def rejection_heatmap(algo_list: dict, index: int = 0):
     plt.show()
 
 
-def main(algo_list: dict, index: int = 0, only_rejections: bool = False):
-    if not only_rejections:
+def random_numbers(algo_list: dict, index: int = 0):
+    _, ax = plt.subplots(1, len(algo_list), figsize=(12, 6))
+    for i, (key, _) in enumerate(algo_list.items()):
+        rows = fetch_data(key, index)
+        for row in rows:
+            row["RAND_NUMS"] = np.array(json.loads(row["RAND_NUMS"]))
+            ax[i].hist(row["RAND_NUMS"], bins=20, alpha=0.5, label=f"m = {row['M']}")
+        ax[i].set_title(f"{key}", fontsize=14)
+        ax[i].set_xlabel("RN Val", fontsize=12)
+        ax[i].set_ylabel("Frequency", fontsize=12)
+        ax[i].legend()
+        ax[i].grid(alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+
+def main(algo_list: dict, index: int = 0, selected: list = [1, 2, 3, 4]):
+    if 1 in selected:
         stat_plot(algo_list, index)
+    if 2 in selected:
         p_plot(algo_list, index)
-    rejection_heatmap(algo_list, index)
+    if 3 in selected:
+        rejection_heatmap(algo_list, index)
+    if 4 in selected:
+        random_numbers(algo_list, index)
