@@ -24,12 +24,7 @@ N = int(config["N"])
 algo_list = {
     "hybrid": alg.hybrid_prng,  # 3rd
     "switch": alg.switch_prng,  # 2nd
-    "switch_shift": alg.switch_shift_prng,  # 1st
-    # "mask": alg.mask_prng,  # Worst Performance
-    # "alt_mask": alg.mask_alt_prng,  # Worst Performance
-    # "mask_shift": alg.mask_shift_prng,  # Performance worse than Alt.
-    # "switch_mask_shift": alg.switch_mask_shift_prng,  # Worst Performance
-    "alt_mask_shift": alg.mask_shift_alt_prng,
+    "switch shift": alg.switch_shift_prng,  # 1st
 }
 
 
@@ -101,7 +96,7 @@ if __name__ == "__main__":
     print("\t[2] P Values")
     print("\t[3] Rejections")
     print("\t[4] Random Numbers")
-    selected = map(int, input(">> ").split())
+    selected = list(map(int, input(">> ").split()))
 
     for i in range(threads):
-        vis.main(algo_list, i, list(selected))
+        vis.main(algo_list, i, selected)
