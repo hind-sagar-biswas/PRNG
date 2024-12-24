@@ -54,7 +54,6 @@ def chi(numbers):
     # Perform the Chi-Square test
     chi2_stat, p_value = chisquare(observed, expected)
     # Return test statistic, p-value, and rejection status
-    print(p_value, ALPHA, p_value < ALPHA)
     return chi2_stat, p_value, int(p_value < ALPHA)
 
 
