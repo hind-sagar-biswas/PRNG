@@ -72,26 +72,42 @@ def stat_plot(algo_list: dict, index: int = 0):
 
 # Plot p-values for the statistical tests
 def p_plot(algo_list: dict, index: int = 0):
-    ks_stats = {}
-    chi_stats = {}
+    ks_p_value = {}
+    chi_p_value = {}
 
     # Collect p-values for each algorithm
     for key, _ in algo_list.items():
-        ks_stats[key] = []
-        chi_stats[key] = []
+        ks_p_value[key] = []
+        chi_p_value[key] = []
         rows = fetch_data(key, index)
         for row in rows:
-            ks_stats[key].append(row["KS_P_VALUE"])
-            chi_stats[key].append(row["CHI_P_VALUE"])
-        ks_stats[key] = np.array(ks_stats[key])
-        chi_stats[key] = np.array(chi_stats[key])
+            ks_p_value[key].append(row["KS_P_VALUE"])
+            chi_p_value[key].append(row["CHI_P_VALUE"])
+        ks_p_value[key] = np.array(ks_p_value[key])
+        chi_p_value[key] = np.array(chi_p_value[key])
 
     # Create subplots for p-values
     _, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
 
     for algo in algo_list:
-        ax1.scatter(log_m_values, ks_stats[algo], label=f"{algo} - K-S")
-        ax2.scatter(log_m_values, chi_stats[algo], label=f"{algo} - Chi^2")
+        ax1.scatter(log_m_values, ks_p_value[algo], label=f"{algo} - K-S")
+        ax2.scatter(log_m_values, chi_p_value[algo], label=f"{algo} - Chi^2")
+
+    ##Plot a line through threshhold of 0.05
+    ax1.plot(
+        log_m_values,
+        np.array([0.05] * 10),
+        label="Alpha (0.05)",
+        linestyle="dashed",
+        color="red",
+    )
+    ax2.plot(
+        log_m_values,
+        np.array([0.05] * 10),
+        label="Alpha (0.05)",
+        linestyle="dashed",
+        color="red",
+    )
 
     # Set titles, labels, and legends
     ax1.set_title("Kolmogorov-Smirnov Test Statistics")
