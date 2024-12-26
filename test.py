@@ -1,5 +1,6 @@
 import os
 import sys
+import timeit
 import threading
 import numpy as np
 import sqlite3 as sq
@@ -62,10 +63,16 @@ def conduct_test(m: int, a: int, algorithm):
     a = 5 * (10**a)  # Scale 'a' by a factor
     numbers = algorithm(m, N, a)  # Generate random numbers using the algorithm
     numbers = normalize(numbers, m)  # Normalize the numbers
+    total_time = timeit.timeit(
+        lambda: algorithm(m, N, a), number=100
+    )  # Time the algorithm
+    time_per_execution = total_time / 100  # Calculate the average time per execution
+
     return {
         "ks": ks(numbers),
         "chi": chi(numbers),
         "numbers": numbers,
+        "time": time_per_execution,
     }
 
 
@@ -127,6 +134,7 @@ if __name__ == "__main__":
     print("\t[2] P Values")
     print("\t[3] Rejections")
     print("\t[4] Random Numbers")
+    print("\t[5] Execution Time")
     selected = list(map(int, input(">> ").split()))
 
     # Visualize results for each thread's data

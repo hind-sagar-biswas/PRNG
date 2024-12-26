@@ -15,12 +15,13 @@ def generate_entry(stats: dict, algo: str, m: int, n: int, alpha: float) -> dict
         "CHI_2_STAT": stats["chi"][0],
         "CHI_P_VALUE": stats["chi"][1],
         "CHI_REJECTED": stats["chi"][2],
+        "TIME": stats["time"],
     }
 
 
 def enter_values(stat: dict, conn: sq.Connection):
     conn.execute(
-        "INSERT INTO RandomnessTests (ALGO, M, N, ALPHA, RAND_NUMS, D_STAT, CHI_2_STAT, KS_P_VALUE, KS_REJECTED, CHI_P_VALUE, CHI_REJECTED) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO RandomnessTests (ALGO, M, N, ALPHA, RAND_NUMS, D_STAT, CHI_2_STAT, KS_P_VALUE, KS_REJECTED, CHI_P_VALUE, CHI_REJECTED, TIME) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             stat["ALGO"],
             stat["M"],
@@ -33,6 +34,7 @@ def enter_values(stat: dict, conn: sq.Connection):
             stat["KS_REJECTED"],
             stat["CHI_P_VALUE"],
             stat["CHI_REJECTED"],
+            stat["TIME"],
         ),
     )
     conn.commit()
@@ -52,6 +54,7 @@ def setup_table(conn: sq.Connection):
         KS_REJECTED  INT    NOT NULL,        -- Whether the null hypothesis was rejected by the K-S test
         CHI_P_VALUE FLOAT   NOT NULL,        -- p-value of the Chi-Square test
         CHI_REJECTED INT    NOT NULL,        -- Whether the null hypothesis was rejected by the Chi-Square test
+        TIME FLOAT          NOT NULL,        -- Time taken to run the function
         TIMESTAMP DATETIME DEFAULT CURRENT_TIMESTAMP -- Timestamp on row creation
     );""")
     print("Table created successfully")

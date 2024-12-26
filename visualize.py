@@ -124,6 +124,21 @@ def p_plot(algo_list: dict, index: int = 0):
     plt.show()
 
 
+def ex_time_plot(algo_list: dict, index: int = 0):
+    for key, _ in algo_list.items():
+        rows = fetch_data(key, index)
+        data = []
+        for row in rows:
+            data.append(row["TIME"])
+        data = np.array(data)
+        plt.plot(log_m_values, data, label=f"{key}")
+    plt.xlabel("Value of m")
+    plt.ylabel("Time (s)")
+    plt.title("Execution Time for Different Algorithms and m Values")
+    plt.legend()
+    plt.show()
+
+
 # Visualize test rejection data using a heatmap
 def rejection_heatmap(algo_list: dict, index: int = 0):
     data = {}
@@ -183,7 +198,7 @@ def random_numbers(algo_list: dict, index: int = 0):
 
 
 # Main function to invoke specific visualizations
-def main(algo_list: dict, index: int = 0, selected: list = [1, 2, 3, 4]):
+def main(algo_list: dict, index: int = 0, selected: list = [1, 2, 3, 4, 5]):
     if 1 in selected:
         stat_plot(algo_list, index)
     if 2 in selected:
@@ -192,3 +207,5 @@ def main(algo_list: dict, index: int = 0, selected: list = [1, 2, 3, 4]):
         rejection_heatmap(algo_list, index)
     if 4 in selected:
         random_numbers(algo_list, index)
+    if 5 in selected:
+        ex_time_plot(algo_list, index)
