@@ -20,7 +20,7 @@ def dict_factory(cursor: sq.Cursor, row: tuple) -> dict:
 
 # Fetch test data for a given algorithm and database index
 def fetch_data(alg, index: int = 0):
-    conn = sq.connect(f"test_{index}.db")
+    conn = sq.connect(f"./results/test_{index}.db")
     conn.row_factory = dict_factory
     cursor = conn.cursor()
     cursor.execute(

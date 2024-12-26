@@ -4,6 +4,7 @@ import timeit
 import threading
 import numpy as np
 import sqlite3 as sq
+from pathlib import Path
 from scipy.stats import kstest, chisquare
 from dotenv import dotenv_values
 
@@ -13,6 +14,9 @@ sys.path.append("./algos")
 import dbconn as db  # Database-related operations
 import visualize as vis  # Visualization functions
 import algos.hprng as alg  # Hybrid PRNG algorithms
+
+# Create test result directory:
+Path("./results").mkdir(parents=True, exist_ok=True)
 
 # Load environment variables for configuration
 config = dotenv_values("env.config")
@@ -98,11 +102,11 @@ def start_tests(algo_list: dict, index: int, conn: sq.Connection):
 # Main function to initialize the database and run tests
 def main(index: int = 0):
     # Remove existing database if it exists
-    if os.path.exists(f"test_{index}.db"):
-        os.remove(f"test_{index}.db")
+    if os.path.exists(f"./results/test_{index}.db"):
+        os.remove(f"./results/test_{index}.db")
 
     # Connect to a new SQLite database
-    conn = sq.connect(f"test_{index}.db")
+    conn = sq.connect(f"./results/test_{index}.db")
     print("Opened database successfully")
 
     # Setup database tables and start tests
