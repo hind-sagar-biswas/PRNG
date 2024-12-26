@@ -100,7 +100,7 @@ def start_tests(algo_list: dict, index: int, conn: sq.Connection):
 
 
 # Main function to initialize the database and run tests
-def main(index: int = 0):
+def tester(index: int = 0):
     # Remove existing database if it exists
     if os.path.exists(f"./results/test_{index}.db"):
         os.remove(f"./results/test_{index}.db")
@@ -116,15 +116,14 @@ def main(index: int = 0):
     conn.close()
 
 
-# Entry point for the program
-if __name__ == "__main__":
+def main():
     # Get the number of threads from the user
     threads = int(input("Number of Threads: "))
     t = []
 
     # Create and start threads for parallel testing
     for i in range(threads):
-        thread = threading.Thread(target=main, args=(i,))
+        thread = threading.Thread(target=tester, args=(i,))
         thread.start()
         t.append(thread)
 
@@ -144,3 +143,11 @@ if __name__ == "__main__":
     # Visualize results for each thread's data
     for i in range(threads):
         vis.main(algo_list, i, selected)
+
+
+# Entry point for the program
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\nExiting tests...")
