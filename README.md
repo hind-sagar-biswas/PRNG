@@ -78,6 +78,7 @@ You will be prompted to input:
     - `CHI_2_STAT`: The Chi-Square test statistic.
     - `KS_P_VALUE`: The p-value of the Kolmogorov-Smirnov test.
     - `CHI_P_VALUE`: The p-value of the Chi-Square test.
+    - `TIME`: The time taken by the algorithm to generate random numbers.
 
 ## Dependencies
 
