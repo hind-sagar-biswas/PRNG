@@ -7,6 +7,17 @@ def leftRotate(n, d):
     return (n << d) | (n >> (INT_BITS - d))
 
 
+def gauss_map_prng(m: int, size: int, _):
+    sequence = []
+    state = (time.time_ns() % 1_000_000) / 1_000_000
+    alpha = 4.9 + (state * 0.001)
+    beta = 0.5
+    for _ in range(size):
+        state = (np.exp(-alpha * state**2) + beta) % (m + 1)
+        sequence.append(state)
+    return sequence
+
+
 def shift_prng(m, n, a):
     a = 5 * (10**a)
     x = time.time_ns()
@@ -120,7 +131,6 @@ def mask_shift_alt_prng(m, n, a):
         x = (n**2 + (x ^ n) << 5) % (m + 1)
         random_numbers.append(x / (m + 1))  # Normalize to [0, 1]
     return random_numbers
-
 
 
 def switch_mask_shift_alt_prng(m, n, a, worst_case_period=0.01):
