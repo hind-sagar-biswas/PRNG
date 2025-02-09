@@ -198,7 +198,7 @@ def random_numbers(algo_list: dict, index: int = 0):
 
 
 # Main function to invoke specific visualizations
-def main(algo_list: dict, index: int = 0, selected: list = [1, 2, 3, 4, 5]):
+def main(algo_list: dict, index: int = 0, selected: set[int] = {1, 2, 3, 4, 5}):
     if 1 in selected:
         stat_plot(algo_list, index)
     if 2 in selected:

@@ -134,12 +134,18 @@ def main():
 
     # Prompt user for visualization options
     print("Select to Visualize Data: ")
+    print("\t[0] All")
     print("\t[1] Statistics")
     print("\t[2] P Values")
-    print("\t[3] Rejections")
-    print("\t[4] Random Numbers")
+    print("\t[3] Rejections Heatmap")
+    print("\t[4] Random Numbers Distribution")
     print("\t[5] Execution Time")
-    selected = list(map(int, input(">> ").split()))
+
+    allowed = {0, 1, 2, 3, 4, 5}
+    selected = set(map(int, input(">> ").split())).intersection(allowed)
+
+    if 0 in selected:
+        selected = allowed - {0}
 
     # Visualize results for each thread's data
     for i in range(threads):
