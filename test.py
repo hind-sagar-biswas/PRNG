@@ -15,43 +15,50 @@ sys.path.append("./algos")
 import algos.hprng as alg  # Hybrid PRNG algorithms
 import dbconn as db  # Database-related operations
 import visualize as vis  # Visualization functions
-
-# Create test result directory:
-Path("./results").mkdir(parents=True, exist_ok=True)
+import binaryGen as gen  # Binary file generation
 
 # Load environment variables for configuration
 config = dotenv_values("env.config")
 
 # Parameters loaded from environment variables
-M_MULTIPLIER = int(config["M_MULTIPLIER"])
-M_INITIAL = int(config["M_INITIAL"])
-M_LIMIT = int(config["M_LIMIT"])
-ALPHA = float(config["ALPHA"])
-N = int(config["N"])
+M_MULTIPLIER = int(config["M_MULTIPLIER"] or 1)
+M_INITIAL = int(config["M_INITIAL"] or 1)
+M_LIMIT = int(config["M_LIMIT"] or 1)
+ALPHA = float(config["ALPHA"] or 0.05)
+N = int(config["N"] or 1000)
+RESULTS_DIR = config["RESULTS_DIR"] or "./results"
+BIN_DIR = config["BIN_DIR"] or "/bin"
+DB_DIR = config["DB_DIR"] or "/db"
+
+# Create test result directory:
+Path(RESULTS_DIR + DB_DIR).mkdir(parents=True, exist_ok=True)
+Path(RESULTS_DIR + BIN_DIR).mkdir(parents=True, exist_ok=True)
 
 # Dictionary of algorithms with their respective functions
 algo_list = {
     "hybrid": alg.hybrid_prng,  # Hybrid PRNG
     "switch": alg.switch_prng,  # Switch-based PRNG
-    "switch shift": alg.switch_shift_prng,  # Switch + Shift PRNG
-    "switch mask shift": alg.switch_mask_shift_prng,  # Switch + Mask + Shift PRNG
+    "tent 1": alg.tent_hybrid,  # Tent-based PRNG version 01
+    "tent 2": alg.tent_hybrid_2,  # Tent-based PRNG version 02
+    # "switch shift": alg.switch_shift_prng,  # Switch + Shift PRNG
+    # "switch mask shift": alg.switch_mask_shift_prng,  # Switch + Mask + Shift PRNG
 }
 
 
 # Normalize random numbers to [0, 1] range
-def normalize(random_nums: list, m: int):
+def normalize(random_nums: list, m: int) -> list:
     return [num / (m + 1) for num in random_nums]
 
 
 # Perform Kolmogorov-Smirnov (K-S) test on a dataset
-def ks(numbers: list):
+def ks(numbers: list[float]) -> tuple:
     D, p_value = kstest(numbers, "uniform")
     # Return test statistic, p-value, and rejection status
     return D, p_value, int(p_value < ALPHA)
 
 
 # Perform Chi-Square test on a dataset
-def chi(numbers):
+def chi(numbers: list[float]) -> tuple:
     k = 10  # Number of bins
     bins = np.linspace(0, 1, k + 1)  # Define bin edges
     observed, _ = np.histogram(numbers, bins)  # Observed frequencies
@@ -64,7 +71,7 @@ def chi(numbers):
 
 
 # Conduct tests (K-S and Chi-Square) for a specific algorithm
-def conduct_test(m: int, a: int, algorithm):
+def conduct_test(m: int, a: int, algorithm) -> dict:
     a = 5 * (10**a)  # Scale 'a' by a factor
     numbers = algorithm(m, N, a)  # Generate random numbers using the algorithm
     numbers = normalize(numbers, m)  # Normalize the numbers
@@ -82,7 +89,7 @@ def conduct_test(m: int, a: int, algorithm):
 
 
 # Run tests for all algorithms and store results in the database
-def start_tests(algo_list: dict, index: int, conn: sq.Connection):
+def start_tests(algo_list: dict, index: int, conn: sq.Connection) -> None:
     for key, value in algo_list.items():
         m = M_INITIAL  # Start with the initial value of 'm'
         while m <= M_LIMIT:
@@ -91,23 +98,34 @@ def start_tests(algo_list: dict, index: int, conn: sq.Connection):
 
             # Conduct tests and generate database entry
             stats = conduct_test(m, index, value)
+
+            # Generate binary file
+            print("Generating Binary Files")
+            gen.generate_binary_file(
+                f"{RESULTS_DIR + BIN_DIR}/test_{index}_{key}_{m}.bin",
+                stats["numbers"],
+            )
+            print(f"Generated Binary Files for {key} with m = {m}")
+
+            # Generate database entry
             stats = db.generate_entry(stats, key, m, N, ALPHA)
-            print("Entering values")
 
             # Insert test results into the database
+            print(f"Entering values into database for {key} with m = {m}")
             db.enter_values(stats, conn)
+
             m *= M_MULTIPLIER  # Increment 'm' by the multiplier
             print("=" * 50)
 
 
 # Main function to initialize the database and run tests
-def tester(index: int = 0):
+def tester(index: int = 0) -> None:
     # Remove existing database if it exists
-    if os.path.exists(f"./results/test_{index}.db"):
-        os.remove(f"./results/test_{index}.db")
+    if os.path.exists(f"{RESULTS_DIR + DB_DIR}/test_{index}.db"):
+        os.remove(f"{RESULTS_DIR + DB_DIR}/test_{index}.db")
 
     # Connect to a new SQLite database
-    conn = sq.connect(f"./results/test_{index}.db")
+    conn = sq.connect(f"{RESULTS_DIR + DB_DIR}/test_{index}.db")
     print("Opened database successfully")
 
     # Setup database tables and start tests
@@ -117,7 +135,7 @@ def tester(index: int = 0):
     conn.close()
 
 
-def main():
+def main() -> None:
     # Get the number of threads from the user
     threads = int(input("Number of Threads: "))
     t = []
@@ -149,7 +167,7 @@ def main():
 
     # Visualize results for each thread's data
     for i in range(threads):
-        vis.main(algo_list, i, selected)
+        vis.main(algo_list, f"{RESULTS_DIR + DB_DIR}/test_{i}.db", selected)
 
 
 # Entry point for the program

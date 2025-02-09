@@ -19,8 +19,8 @@ def dict_factory(cursor: sq.Cursor, row: tuple) -> dict:
 
 
 # Fetch test data for a given algorithm and database index
-def fetch_data(alg, index: int = 0):
-    conn = sq.connect(f"./results/test_{index}.db")
+def fetch_data(alg, path: str) -> list:
+    conn = sq.connect(path)
     conn.row_factory = dict_factory
     cursor = conn.cursor()
     cursor.execute(
@@ -33,7 +33,7 @@ def fetch_data(alg, index: int = 0):
 
 
 # Plot statistical test results (K-S and Chi-Square) for algorithms
-def stat_plot(algo_list: dict, index: int = 0):
+def stat_plot(algo_list: dict, path: str) -> None:
     ks_stats = {}
     chi_stats = {}
 
@@ -41,7 +41,7 @@ def stat_plot(algo_list: dict, index: int = 0):
     for key, _ in algo_list.items():
         ks_stats[key] = []
         chi_stats[key] = []
-        rows = fetch_data(key, index)
+        rows = fetch_data(key, path)
         for row in rows:
             ks_stats[key].append(row["D_STAT"])
             chi_stats[key].append(row["CHI_2_STAT"])
@@ -71,7 +71,7 @@ def stat_plot(algo_list: dict, index: int = 0):
 
 
 # Plot p-values for the statistical tests
-def p_plot(algo_list: dict, index: int = 0):
+def p_plot(algo_list: dict, path: str) -> None:
     ks_p_value = {}
     chi_p_value = {}
 
@@ -79,7 +79,7 @@ def p_plot(algo_list: dict, index: int = 0):
     for key, _ in algo_list.items():
         ks_p_value[key] = []
         chi_p_value[key] = []
-        rows = fetch_data(key, index)
+        rows = fetch_data(key, path)
         for row in rows:
             ks_p_value[key].append(row["KS_P_VALUE"])
             chi_p_value[key].append(row["CHI_P_VALUE"])
@@ -124,9 +124,9 @@ def p_plot(algo_list: dict, index: int = 0):
     plt.show()
 
 
-def ex_time_plot(algo_list: dict, index: int = 0):
+def ex_time_plot(algo_list: dict, path: str) -> None:
     for key, _ in algo_list.items():
-        rows = fetch_data(key, index)
+        rows = fetch_data(key, path)
         data = []
         for row in rows:
             data.append(row["TIME"])
@@ -140,14 +140,14 @@ def ex_time_plot(algo_list: dict, index: int = 0):
 
 
 # Visualize test rejection data using a heatmap
-def rejection_heatmap(algo_list: dict, index: int = 0):
+def rejection_heatmap(algo_list: dict, path: str) -> None:
     data = {}
 
     # Collect rejection results for each algorithm
     for key, _ in algo_list.items():
         data[f"{key}_ks"] = []
         data[f"{key}_chi"] = []
-        rows = fetch_data(key, index)
+        rows = fetch_data(key, path)
         for row in rows:
             data[f"{key}_ks"].append(row["KS_REJECTED"])
             data[f"{key}_chi"].append(row["CHI_REJECTED"])
@@ -170,11 +170,11 @@ def rejection_heatmap(algo_list: dict, index: int = 0):
 
 
 # Visualize random number distributions using boxplots
-def random_numbers(algo_list: dict, index: int = 0):
+def random_numbers(algo_list: dict, path: str) -> None:
     _, ax = plt.subplots(1, len(algo_list), figsize=(12, 6))
 
     for i, (key, _) in enumerate(algo_list.items()):
-        rows = fetch_data(key, index)
+        rows = fetch_data(key, path)
         data = []  # Collect random numbers for boxplot
         labels = []  # Labels for the boxplot
         for row in rows:
@@ -198,14 +198,14 @@ def random_numbers(algo_list: dict, index: int = 0):
 
 
 # Main function to invoke specific visualizations
-def main(algo_list: dict, index: int = 0, selected: set[int] = {1, 2, 3, 4, 5}):
+def main(algo_list: dict, path: str, selected: set[int] = {1, 2, 3, 4, 5}) -> None:
     if 1 in selected:
-        stat_plot(algo_list, index)
+        stat_plot(algo_list, path)
     if 2 in selected:
-        p_plot(algo_list, index)
+        p_plot(algo_list, path)
     if 3 in selected:
-        rejection_heatmap(algo_list, index)
+        rejection_heatmap(algo_list, path)
     if 4 in selected:
-        random_numbers(algo_list, index)
+        random_numbers(algo_list, path)
     if 5 in selected:
-        ex_time_plot(algo_list, index)
+        ex_time_plot(algo_list, path)
