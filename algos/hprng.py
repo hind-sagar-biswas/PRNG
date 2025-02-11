@@ -1,5 +1,7 @@
-import numpy as np
 import time
+
+import maps as mp
+import numpy as np
 
 """
 Parameters:
@@ -13,14 +15,9 @@ Returns:
 """
 
 
-def tent(x: float, mu: float = 0.5) -> float:  # 0 < x < 1 ; 1 < mu < 2
-    return mu * x if x < 0.5 else mu * (1 - x)
-
-
-def gauss(
-    x: float, alpha: float = 0.3, beta: float = -0.7
-) -> float:  # a > 0 ; -1 < b < 1
-    return np.exp(-alpha * x**2) + beta
+def rotl(x: int, k: int, bits: int = 64) -> int:
+    mask = (1 << bits) - 1
+    return ((x << k) & mask) | (x >> (bits - k))
 
 
 def tent_hybrid(m: int, n: int, a: int, w: float = 0.01):
@@ -32,7 +29,7 @@ def tent_hybrid(m: int, n: int, a: int, w: float = 0.01):
         if i % worst_case_period == 0:
             x = time.time_ns()
         x = (n**2 * np.exp(tnt) + (x * a)) % (m + 1)
-        tnt = tent(tnt)
+        tnt = mp.tent(tnt)
         random_numbers.append(x)
     return random_numbers
 
@@ -46,7 +43,40 @@ def tent_hybrid_2(m: int, n: int, a: int, w: float = 0.01):
         if i % worst_case_period == 0:
             x = time.time_ns()
         x = (n * np.exp(tnt) + (x * a)) % (m + 1)
-        tnt = tent(tnt)
+        tnt = mp.tent(tnt)
+        random_numbers.append(x)
+    return random_numbers
+
+
+def tent_hybrid_3(m: int, n: int, a: int, w: float = 0.01):
+    x = time.time_ns()
+    worst_case_period = round(w * m)
+    t = (x % 1_000_000) / 1_000_000
+    l = t
+    random_numbers = []
+    for i in range(n):
+        if i % worst_case_period == 0:
+            x = time.time_ns()
+        t = mp.tent(t, 2)
+        l = mp.logistic(l, r=3.99)
+        mix = int(t * 1_000_000) ^ int(l * 1_000_000)
+        mix = rotl(mix, int(t * 64)) ^ rotl(x, int(l * 64))
+        x = (mix ^ (x * a)) % (m + 1)
+        random_numbers.append(x)
+    return random_numbers
+
+
+def tent_hybrid_4(m: int, n: int, a: int):
+    x = time.time_ns()
+    t = (x % 1_000_000) / 1_000_000
+    l = t
+    random_numbers = []
+    for _ in range(n):
+        t = mp.tent(t, 2)
+        l = mp.logistic(l, r=3.99)
+        mix = int(t * 1_000_000) ^ int(l * 1_000_000)
+        mix = rotl(mix, int(t * 64)) ^ rotl(x, int(l * 64))
+        x = (mix ^ (x * a)) % (m + 1)
         random_numbers.append(x)
     return random_numbers
 
@@ -60,7 +90,7 @@ def gauss_hybrid(m: int, n: int, a: int, w: float = 0.01):
         if i % worst_case_period == 0:
             x = time.time_ns()
         x = (n**2 * np.exp(g_var) + (x * a)) % (m + 1)
-        g_var = gauss(g_var)
+        g_var = mp.gauss(g_var)
         random_numbers.append(x)
     return random_numbers
 
@@ -74,7 +104,7 @@ def gauss_hybrid_2(m: int, n: int, a: int, w: float = 0.01):
         if i % worst_case_period == 0:
             x = time.time_ns()
         x = (n * np.exp(g_var) + (x * a)) % (m + 1)
-        g_var = gauss(g_var)
+        g_var = mp.gauss(g_var)
         random_numbers.append(x)
     return random_numbers
 

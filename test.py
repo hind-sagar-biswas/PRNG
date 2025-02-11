@@ -38,10 +38,10 @@ Path(RESULTS_DIR + BIN_DIR).mkdir(parents=True, exist_ok=True)
 algo_list = {
     "hybrid": alg.hybrid_prng,  # Hybrid PRNG
     "switch": alg.switch_prng,  # Switch-based PRNG
-    "tent 1": alg.tent_hybrid,  # Tent-based PRNG version 01
-    "tent 2": alg.tent_hybrid_2,  # Tent-based PRNG version 02
-    # "switch shift": alg.switch_shift_prng,  # Switch + Shift PRNG
-    # "switch mask shift": alg.switch_mask_shift_prng,  # Switch + Mask + Shift PRNG
+    # "tent 1": alg.tent_hybrid,  # Tent-based PRNG version 01
+    # "tent 2": alg.tent_hybrid_2,  # Tent-based PRNG version 02
+    "tent 3": alg.tent_hybrid_3,  # Tent-based PRNG version 03
+    "tent 4": alg.tent_hybrid_4,  # Tent-based PRNG version 04
 }
 
 
