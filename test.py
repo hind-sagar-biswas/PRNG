@@ -16,6 +16,7 @@ import algos.hprng as alg  # Hybrid PRNG algorithms
 import dbconn as db  # Database-related operations
 import visualize as vis  # Visualization functions
 import binaryGen as gen  # Binary file generation
+import compilattion as cmp
 
 # Load environment variables for configuration
 config = dotenv_values("env.config")
@@ -38,10 +39,7 @@ Path(RESULTS_DIR + BIN_DIR).mkdir(parents=True, exist_ok=True)
 algo_list = {
     "hybrid": alg.hybrid_prng,  # Hybrid PRNG
     "switch": alg.switch_prng,  # Switch-based PRNG
-    # "tent 1": alg.tent_hybrid,  # Tent-based PRNG version 01
-    # "tent 2": alg.tent_hybrid_2,  # Tent-based PRNG version 02
-    "tent 3": alg.tent_hybrid_3,  # Tent-based PRNG version 03
-    "tent 4": alg.tent_hybrid_4,  # Tent-based PRNG version 04
+    # "tent 3": alg.tent_hybrid_3,  # Tent-based PRNG version 03
 }
 
 
@@ -90,32 +88,34 @@ def conduct_test(m: int, a: int, algorithm) -> dict:
 
 # Run tests for all algorithms and store results in the database
 def start_tests(algo_list: dict, index: int, conn: sq.Connection) -> None:
+    th = f"[THREAD {index:03}]\t"
     for key, value in algo_list.items():
         m = M_INITIAL  # Start with the initial value of 'm'
         while m <= M_LIMIT:
-            print("=" * 50)
-            print(f"Testing {key} with m = {m}")
+            print(f"[THREAD {index:03}]\t" + "=" * 50)
+            print(f"{th}Testing {key} with m = {m}")
 
             # Conduct tests and generate database entry
             stats = conduct_test(m, index, value)
 
             # Generate binary file
-            print("Generating Binary Files")
-            gen.generate_binary_file(
-                f"{RESULTS_DIR + BIN_DIR}/test_{index}_{key}_{m}.bin",
-                stats["numbers"],
-            )
-            print(f"Generated Binary Files for {key} with m = {m}")
+            # print(f"{th}Generating Binary Files")
+            # gen.generate_binary_file(
+            #     f"{RESULTS_DIR + BIN_DIR}/test_{index}_{key}_{m}.bin",
+            #     stats["numbers"],
+            # )
+            # print(f"{th}Generated Binary Files for {key} with m = {m}")
 
             # Generate database entry
             stats = db.generate_entry(stats, key, m, N, ALPHA)
 
             # Insert test results into the database
-            print(f"Entering values into database for {key} with m = {m}")
+            print(f"{th}Entering values into database for {key} with m = {m}")
             db.enter_values(stats, conn)
+            print(f"{th}Values entered successfully")
 
             m *= M_MULTIPLIER  # Increment 'm' by the multiplier
-            print("=" * 50)
+            print(f"[THREAD {index:03}]\t" + "=" * 50)
 
 
 # Main function to initialize the database and run tests
@@ -126,7 +126,7 @@ def tester(index: int = 0) -> None:
 
     # Connect to a new SQLite database
     conn = sq.connect(f"{RESULTS_DIR + DB_DIR}/test_{index}.db")
-    print("Opened database successfully")
+    print(f"[THREAD {index:03}]\tOpened database successfully")
 
     # Setup database tables and start tests
     db.setup_table(conn)
@@ -149,6 +149,8 @@ def main() -> None:
     # Wait for all threads to complete
     for thread in t:
         thread.join()
+        
+    cmp.main(threads, algo_list, RESULTS_DIR + DB_DIR)
 
     # Prompt user for visualization options
     print("Select to Visualize Data: ")
@@ -158,7 +160,7 @@ def main() -> None:
     print("\t[3] Rejections Heatmap")
     print("\t[4] Random Numbers Distribution")
     print("\t[5] Execution Time")
-
+    
     allowed = {0, 1, 2, 3, 4, 5}
     selected = set(map(int, input(">> ").split())).intersection(allowed)
 

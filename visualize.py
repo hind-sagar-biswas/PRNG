@@ -19,12 +19,12 @@ def dict_factory(cursor: sq.Cursor, row: tuple) -> dict:
 
 
 # Fetch test data for a given algorithm and database index
-def fetch_data(alg, path: str) -> list:
+def fetch_data(alg, path: str, select: list[str] = ['*']) -> list:
     conn = sq.connect(path)
     conn.row_factory = dict_factory
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT * FROM RandomnessTests WHERE ALGO = ? ORDER BY M ASC",
+        f"SELECT {", ".join(select)} FROM RandomnessTests WHERE ALGO = ? ORDER BY M ASC",
         (alg,),
     )
     rows = cursor.fetchall()

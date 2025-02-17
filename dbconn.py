@@ -38,7 +38,6 @@ def enter_values(stat: dict, conn: sq.Connection):
         ),
     )
     conn.commit()
-    print("Values entered successfully")
 
 
 def setup_table(conn: sq.Connection):
