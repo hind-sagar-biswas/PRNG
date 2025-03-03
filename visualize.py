@@ -19,7 +19,7 @@ def dict_factory(cursor: sq.Cursor, row: tuple) -> dict:
 
 
 # Fetch test data for a given algorithm and database index
-def fetch_data(alg, path: str, select: list[str] = ['*']) -> list:
+def fetch_data(alg: str, path: str, select: list[str] = ["*"]) -> list:
     conn = sq.connect(path)
     conn.row_factory = dict_factory
     cursor = conn.cursor()
@@ -33,12 +33,12 @@ def fetch_data(alg, path: str, select: list[str] = ['*']) -> list:
 
 
 # Plot statistical test results (K-S and Chi-Square) for algorithms
-def stat_plot(algo_list: dict, path: str) -> None:
+def stat_plot(algo_list: list[str], path: str) -> None:
     ks_stats = {}
     chi_stats = {}
 
     # Collect test statistics for each algorithm
-    for key, _ in algo_list.items():
+    for key in algo_list:
         ks_stats[key] = []
         chi_stats[key] = []
         rows = fetch_data(key, path)
@@ -71,12 +71,12 @@ def stat_plot(algo_list: dict, path: str) -> None:
 
 
 # Plot p-values for the statistical tests
-def p_plot(algo_list: dict, path: str) -> None:
+def p_plot(algo_list: list[str], path: str) -> None:
     ks_p_value = {}
     chi_p_value = {}
 
     # Collect p-values for each algorithm
-    for key, _ in algo_list.items():
+    for key in algo_list:
         ks_p_value[key] = []
         chi_p_value[key] = []
         rows = fetch_data(key, path)
@@ -124,8 +124,8 @@ def p_plot(algo_list: dict, path: str) -> None:
     plt.show()
 
 
-def ex_time_plot(algo_list: dict, path: str) -> None:
-    for key, _ in algo_list.items():
+def ex_time_plot(algo_list: list[str], path: str) -> None:
+    for key in algo_list:
         rows = fetch_data(key, path)
         data = []
         for row in rows:
@@ -140,11 +140,11 @@ def ex_time_plot(algo_list: dict, path: str) -> None:
 
 
 # Visualize test rejection data using a heatmap
-def rejection_heatmap(algo_list: dict, path: str) -> None:
+def rejection_heatmap(algo_list: list[str], path: str) -> None:
     data = {}
 
     # Collect rejection results for each algorithm
-    for key, _ in algo_list.items():
+    for key in algo_list:
         data[f"{key}_ks"] = []
         data[f"{key}_chi"] = []
         rows = fetch_data(key, path)
@@ -170,10 +170,10 @@ def rejection_heatmap(algo_list: dict, path: str) -> None:
 
 
 # Visualize random number distributions using boxplots
-def random_numbers(algo_list: dict, path: str) -> None:
+def random_numbers(algo_list: list[str], path: str) -> None:
     _, ax = plt.subplots(1, len(algo_list), figsize=(12, 6))
 
-    for i, (key, _) in enumerate(algo_list.items()):
+    for i, key in enumerate(algo_list):
         rows = fetch_data(key, path)
         data = []  # Collect random numbers for boxplot
         labels = []  # Labels for the boxplot
@@ -197,8 +197,27 @@ def random_numbers(algo_list: dict, path: str) -> None:
     plt.show()
 
 
+def get_selection() -> set:
+    # Prompt user for visualization options
+    print("Select to Visualize Data: ")
+    print("\t[0] All")
+    print("\t[1] Statistics")
+    print("\t[2] P Values")
+    print("\t[3] Rejections Heatmap")
+    print("\t[4] Random Numbers Distribution")
+    print("\t[5] Execution Time")
+
+    allowed = {0, 1, 2, 3, 4, 5}
+    selected = set(map(int, input(">> ").split())).intersection(allowed)
+
+    if 0 in selected:
+        selected = allowed - {0}
+
+    return selected
+
+
 # Main function to invoke specific visualizations
-def main(algo_list: dict, path: str, selected: set[int] = {1, 2, 3, 4, 5}) -> None:
+def main(algo_list: list[str], path: str, selected: set[int] = {1, 2, 3, 4, 5}) -> None:
     if 1 in selected:
         stat_plot(algo_list, path)
     if 2 in selected:
@@ -209,3 +228,26 @@ def main(algo_list: dict, path: str, selected: set[int] = {1, 2, 3, 4, 5}) -> No
         random_numbers(algo_list, path)
     if 5 in selected:
         ex_time_plot(algo_list, path)
+
+
+# Entry point for the program
+if __name__ == "__main__":
+    from test import algo_list, RESULTS_DIR, DB_DIR
+
+    algs = list(algo_list.keys()) + [
+        "C",
+        "C++",
+        "Rust",
+        "JS",
+        "Java",
+        "PHP",
+    ]
+
+    threads = int(input("Thread: "))
+    try:
+        selected = get_selection()
+        for i in range(threads):
+            main(algs, f"{RESULTS_DIR + DB_DIR}/test_{i}.db", selected)
+    except KeyboardInterrupt:
+        print("\n\nExiting tests...")
+

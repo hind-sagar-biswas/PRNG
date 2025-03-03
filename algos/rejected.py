@@ -1,10 +1,77 @@
 import time
+import maps as mp
 
 INT_BITS = 64
 
 
 def leftRotate(n, d):
     return (n << d) | (n >> (INT_BITS - d))
+
+def tent_hybrid(m: int, n: int, a: int, w: float = 0.01):
+    x = time.time_ns()
+    worst_case_period = round(w * m)
+    tnt = (x % 1_000_000) / 1_000_000
+    random_numbers = []
+    for i in range(n):
+        if i % worst_case_period == 0:
+            x = time.time_ns()
+        x = (n**2 * np.exp(tnt) + (x * a)) % (m + 1)
+        tnt = mp.tent(tnt)
+        random_numbers.append(x)
+    return random_numbers
+
+def tent_hybrid_2(m: int, n: int, a: int, w: float = 0.01):
+    x = time.time_ns()
+    worst_case_period = round(w * m)
+    tnt = (x % 1_000_000) / 1_000_000
+    random_numbers = []
+    for i in range(n):
+        if i % worst_case_period == 0:
+            x = time.time_ns()
+        x = (n * np.exp(tnt) + (x * a)) % (m + 1)
+        tnt = mp.tent(tnt)
+        random_numbers.append(x)
+    return random_numbers
+
+
+def tent_hybrid_5(m: int, n: int, a: int, w: float = 0.01):
+    x = time.time_ns()
+    t = (x % 1_000_000) / 1_000_000
+    l = t
+    random_numbers = []
+    for i in range(n):
+        t = mp.tent(t, 2)
+        l = mp.logistic(l, r=3.99)
+        mix = int(t * 1_000_000) ^ int(l * 1_000_000)
+        x = (mix ^ (x * a)) % (m + 1)
+        random_numbers.append(x)
+    return random_numbers
+
+def gauss_hybrid(m: int, n: int, a: int, w: float = 0.01):
+    x = time.time_ns()
+    worst_case_period = round(w * m)
+    g_var = (x % 1_000_000) / 1_000_000
+    random_numbers = []
+    for i in range(n):
+        if i % worst_case_period == 0:
+            x = time.time_ns()
+        x = (n**2 * np.exp(g_var) + (x * a)) % (m + 1)
+        g_var = mp.gauss(g_var)
+        random_numbers.append(x)
+    return random_numbers
+
+def gauss_hybrid_2(m: int, n: int, a: int, w: float = 0.01):
+    x = time.time_ns()
+    worst_case_period = round(w * m)
+    g_var = (x % 1_000_000) / 1_000_000
+    random_numbers = []
+    for i in range(n):
+        if i % worst_case_period == 0:
+            x = time.time_ns()
+        x = (n * np.exp(g_var) + (x * a)) % (m + 1)
+        g_var = mp.gauss(g_var)
+        random_numbers.append(x)
+    return random_numbers
 
 
 def gauss_map_prng(m: int, size: int, _):

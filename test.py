@@ -16,7 +16,8 @@ import algos.hprng as alg  # Hybrid PRNG algorithms
 import dbconn as db  # Database-related operations
 import visualize as vis  # Visualization functions
 import binaryGen as gen  # Binary file generation
-import compilattion as cmp
+import compilattion as cmp  # Compilattion
+import extern.collect as clct  # External Library tests
 
 # Load environment variables for configuration
 config = dotenv_values("env.config")
@@ -38,8 +39,15 @@ Path(RESULTS_DIR + BIN_DIR).mkdir(parents=True, exist_ok=True)
 # Dictionary of algorithms with their respective functions
 algo_list = {
     "hybrid": alg.hybrid_prng,  # Hybrid PRNG
-    "switch": alg.switch_prng,  # Switch-based PRNG
-    # "tent 3": alg.tent_hybrid_3,  # Tent-based PRNG version 03
+    # "switch": alg.switch_prng,    # Switch-based PRNG
+    # "chprng": alg.tent_hybrid_3,  # Tent-based PRNG version 03
+    # "tent 4": alg.tent_hybrid_4,  # Tent-based PRNG version 04
+    # "tent 5": alg.tent_hybrid_5,  # Tent-based PRNG version 05
+    # "mt19937": alg.mt19937,  # Mersenne Twister
+    # "pcg": alg.pcg,  # PCG
+    # "xorshift128plus": alg.xorshift128plus,  # Xorshift128+
+    # "well512a": alg.well512a,  # Well512a
+    # "splitmix64": alg.splitmix64,  # Splitmix64
 }
 
 
@@ -86,25 +94,56 @@ def conduct_test(m: int, a: int, algorithm) -> dict:
     }
 
 
+# Conduct tests for external libraries
+def conduct_external_test() -> dict[str, dict]:
+    extern_dir = Path("./extern")
+    data = clct.main(
+        N,
+        {
+            "C": f"gcc {extern_dir}/gcc/rand.c -o {extern_dir}/gcc/rand.out && {extern_dir}/gcc/rand.out",
+            "C++": f"g++ {extern_dir}/gcc/rand.cpp -o {extern_dir}/gcc/rand.out && {extern_dir}/gcc/rand.out",
+            "Rust": f"cd {extern_dir}/rust && cargo run --release --",
+            "JS": f"node {extern_dir}/rand.js",
+            "Java": f"javac {extern_dir}/java/Rand.java && java -cp {extern_dir}/java Rand",
+            "PHP": f"php {extern_dir}/rand.php",
+        },
+    )
+
+    results = {}
+
+    for key, value in data.items():
+        results[key] = {
+            "ks": ks(value),
+            "chi": chi(value),
+            "numbers": value,
+            "time": 0,
+        }
+
+    return results
+
+
 # Run tests for all algorithms and store results in the database
-def start_tests(algo_list: dict, index: int, conn: sq.Connection) -> None:
+def start_tests(
+    algo_list: dict, index: int, conn: sq.Connection, generate_binary: bool
+) -> None:
     th = f"[THREAD {index:03}]\t"
     for key, value in algo_list.items():
         m = M_INITIAL  # Start with the initial value of 'm'
         while m <= M_LIMIT:
-            print(f"[THREAD {index:03}]\t" + "=" * 50)
+            print(th + "=" * 50)
             print(f"{th}Testing {key} with m = {m}")
 
             # Conduct tests and generate database entry
             stats = conduct_test(m, index, value)
 
             # Generate binary file
-            # print(f"{th}Generating Binary Files")
-            # gen.generate_binary_file(
-            #     f"{RESULTS_DIR + BIN_DIR}/test_{index}_{key}_{m}.bin",
-            #     stats["numbers"],
-            # )
-            # print(f"{th}Generated Binary Files for {key} with m = {m}")
+            if generate_binary:
+                print(f"{th}Generating Binary Files")
+                gen.generate_binary_file(
+                    f"{RESULTS_DIR + BIN_DIR}/test_{index}_{key}_{m}.bin",
+                    stats["numbers"],
+                )
+                print(f"{th}Generated Binary Files for {key} with m = {m}")
 
             # Generate database entry
             stats = db.generate_entry(stats, key, m, N, ALPHA)
@@ -117,9 +156,22 @@ def start_tests(algo_list: dict, index: int, conn: sq.Connection) -> None:
             m *= M_MULTIPLIER  # Increment 'm' by the multiplier
             print(f"[THREAD {index:03}]\t" + "=" * 50)
 
+    m = M_INITIAL  # Start with the initial value of 'm'
+    while m <= M_LIMIT:
+        # Conduct tests for external libraries
+        print(f"{th}Conducting Tests for External Libraries")
+        result = conduct_external_test()
+        for key, stats in result.items():
+            # Generate database entry
+            stats = db.generate_entry(stats, key, m, N, ALPHA)
+            print(f"{th}Entering values into database for {key}")
+            db.enter_values(stats, conn)
+            print(f"{th}Values entered successfully")
+        m *= M_MULTIPLIER  # Increment 'm' by the multiplier
+
 
 # Main function to initialize the database and run tests
-def tester(index: int = 0) -> None:
+def tester(index: int = 0, generate_binary: bool = False) -> None:
     # Remove existing database if it exists
     if os.path.exists(f"{RESULTS_DIR + DB_DIR}/test_{index}.db"):
         os.remove(f"{RESULTS_DIR + DB_DIR}/test_{index}.db")
@@ -130,7 +182,7 @@ def tester(index: int = 0) -> None:
 
     # Setup database tables and start tests
     db.setup_table(conn)
-    start_tests(algo_list, index, conn)
+    start_tests(algo_list, index, conn, generate_binary)
 
     conn.close()
 
@@ -138,38 +190,34 @@ def tester(index: int = 0) -> None:
 def main() -> None:
     # Get the number of threads from the user
     threads = int(input("Number of Threads: "))
+    generate_binary = input("Generate Binary Files? (y/n): ").lower() == "y"
     t = []
 
     # Create and start threads for parallel testing
     for i in range(threads):
-        thread = threading.Thread(target=tester, args=(i,))
+        thread = threading.Thread(
+            target=tester,
+            args=(
+                i,
+                generate_binary,
+            ),
+        )
         thread.start()
         t.append(thread)
 
     # Wait for all threads to complete
     for thread in t:
         thread.join()
-        
-    cmp.main(threads, algo_list, RESULTS_DIR + DB_DIR)
 
-    # Prompt user for visualization options
-    print("Select to Visualize Data: ")
-    print("\t[0] All")
-    print("\t[1] Statistics")
-    print("\t[2] P Values")
-    print("\t[3] Rejections Heatmap")
-    print("\t[4] Random Numbers Distribution")
-    print("\t[5] Execution Time")
-    
-    allowed = {0, 1, 2, 3, 4, 5}
-    selected = set(map(int, input(">> ").split())).intersection(allowed)
+    algs = list(algo_list.keys()) + ["C", "C++", "Rust", "JS", "Java", "PHP"]
 
-    if 0 in selected:
-        selected = allowed - {0}
+    cmp.main(threads, algs, RESULTS_DIR + DB_DIR)
+
+    selected = vis.get_selection()
 
     # Visualize results for each thread's data
     for i in range(threads):
-        vis.main(algo_list, f"{RESULTS_DIR + DB_DIR}/test_{i}.db", selected)
+        vis.main(algs, f"{RESULTS_DIR + DB_DIR}/test_{i}.db", selected)
 
 
 # Entry point for the program
