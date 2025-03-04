@@ -19,22 +19,23 @@ def rotl(x: int, k: int, bits: int = 64) -> int:
     mask = (1 << bits) - 1
     return ((x << k) & mask) | (x >> (bits - k))
 
-def mt19937(n: int, m: int, _:int, seed: int=5489):
+
+def mt19937(m: int, n: int, _: int, seed: int = 5489):
     # Initialize the state array with 624 32-bit integers.
     state = [0] * 624
-    state[0] = seed & 0xffffffff
+    state[0] = seed & 0xFFFFFFFF
     for i in range(1, 624):
-        state[i] = (1812433253 * (state[i - 1] ^ (state[i - 1] >> 30)) + i) & 0xffffffff
+        state[i] = (1812433253 * (state[i - 1] ^ (state[i - 1] >> 30)) + i) & 0xFFFFFFFF
 
     index = 624  # Force twist on first extraction
 
     def twist():
         nonlocal state, index
         for i in range(624):
-            y = (state[i] & 0x80000000) + (state[(i + 1) % 624] & 0x7fffffff)
+            y = (state[i] & 0x80000000) + (state[(i + 1) % 624] & 0x7FFFFFFF)
             state[i] = state[(i + 397) % 624] ^ (y >> 1)
             if y & 1:
-                state[i] ^= 0x9908b0df
+                state[i] ^= 0x9908B0DF
         index = 0
 
     def extract_number():
@@ -43,17 +44,18 @@ def mt19937(n: int, m: int, _:int, seed: int=5489):
             twist()
         y = state[index]
         # Tempering
-        y ^= (y >> 11)
-        y ^= (y << 7) & 0x9d2c5680
-        y ^= (y << 15) & 0xefc60000
-        y ^= (y >> 18)
+        y ^= y >> 11
+        y ^= (y << 7) & 0x9D2C5680
+        y ^= (y << 15) & 0xEFC60000
+        y ^= y >> 18
         index += 1
-        return y & 0xffffffff
+        return y & 0xFFFFFFFF
 
     # Generate n numbers (each reduced modulo m)
-    return [extract_number() % (m+1) for _ in range(n)]
+    return [extract_number() % (m + 1) for _ in range(n)]
 
-def pcg(n: int, m: int, _:int, seed: int=42, inc=1442695040888963407):
+
+def pcg(m: int, n: int, _: int, seed: int = 42, inc=1442695040888963407):
     mask = (1 << 64) - 1
     state = seed & mask
     multiplier = 6364136223846793005
@@ -61,14 +63,15 @@ def pcg(n: int, m: int, _:int, seed: int=42, inc=1442695040888963407):
     def next():
         nonlocal state
         state = (state * multiplier + inc) & mask
-        xorshifted = (((state >> 18) ^ state) >> 27) & 0xffffffff
+        xorshifted = (((state >> 18) ^ state) >> 27) & 0xFFFFFFFF
         rot = state >> 59
         # Perform a bitwise right rotation on xorshifted
-        return ((xorshifted >> rot) | (xorshifted << ((-rot) & 31))) & 0xffffffff
+        return ((xorshifted >> rot) | (xorshifted << ((-rot) & 31))) & 0xFFFFFFFF
 
-    return [next() % (m+1) for _ in range(n)]
+    return [next() % (m + 1) for _ in range(n)]
 
-def xorshift128plus(n: int, m: int, _:int, seed1: int=123456789, seed2=362436069):
+
+def xorshift128plus(m: int, n: int, _: int, seed1: int = 123456789, seed2=362436069):
     mask = (1 << 64) - 1
     # Initialize state with two 64-bit values.
     s = [seed1 & mask, seed2 & mask]
@@ -84,34 +87,42 @@ def xorshift128plus(n: int, m: int, _:int, seed1: int=123456789, seed2=362436069
         s[1] = s0
         return result
 
-    return [next() % (m+1) for _ in range(n)]
+    return [next() % (m + 1) for _ in range(n)]
 
-def well512a(n: int, m: int, _:int, seed: int=123456789):
+
+def well512a(m: int, n: int, _: int, seed: int = 123456789):
     # Initialize a state array of 16 32-bit unsigned integers.
     state = [0] * 16
-    state[0] = seed & 0xffffffff
+    state[0] = seed & 0xFFFFFFFF
     for i in range(1, 16):
-        state[i] = (1812433253 * (state[i - 1] ^ (state[i - 1] >> 30)) + i) & 0xffffffff
+        state[i] = (1812433253 * (state[i - 1] ^ (state[i - 1] >> 30)) + i) & 0xFFFFFFFF
     index = 0
 
     def next():
         nonlocal index, state
         a = state[index]
         c = state[(index + 13) & 15]
-        b = a ^ c ^ ((a << 16) & 0xffffffff) ^ ((c << 15) & 0xffffffff)
+        b = a ^ c ^ ((a << 16) & 0xFFFFFFFF) ^ ((c << 15) & 0xFFFFFFFF)
         c = state[(index + 9) & 15]
-        c ^= (c >> 11)
-        a = state[index] = (b ^ c) & 0xffffffff
-        d = a ^ ((a << 5) & 0xda442d24)
+        c ^= c >> 11
+        a = state[index] = (b ^ c) & 0xFFFFFFFF
+        d = a ^ ((a << 5) & 0xDA442D24)
         index = (index + 15) & 15
         a = state[index]
-        state[index] = (a ^ b ^ d ^ ((a << 2) & 0xffffffff) ^
-                        ((b << 18) & 0xffffffff) ^ ((c << 28) & 0xffffffff)) & 0xffffffff
+        state[index] = (
+            a
+            ^ b
+            ^ d
+            ^ ((a << 2) & 0xFFFFFFFF)
+            ^ ((b << 18) & 0xFFFFFFFF)
+            ^ ((c << 28) & 0xFFFFFFFF)
+        ) & 0xFFFFFFFF
         return state[index]
 
-    return [next() % (m+1) for _ in range(n)]
+    return [next() % (m + 1) for _ in range(n)]
 
-def splitmix64(n: int, m: int, _:int, seed: int=42):
+
+def splitmix64(m: int, n: int, _: int, seed: int = 42):
     mask = (1 << 64) - 1
     state = seed & mask
 
@@ -125,7 +136,7 @@ def splitmix64(n: int, m: int, _:int, seed: int=42):
         result &= mask
         return result ^ (result >> 31)
 
-    return [next() % (m+1) for _ in range(n)]
+    return [next() % (m + 1) for _ in range(n)]
 
 
 def tent_hybrid_3(m: int, n: int, a: int, w: float = 0.01):
@@ -145,6 +156,7 @@ def tent_hybrid_3(m: int, n: int, a: int, w: float = 0.01):
         random_numbers.append(x)
     return random_numbers
 
+
 def chaos_hprng(m: int, n: int, a: int, w: float = 0.01):
     x = time.time_ns()
     worst_case_period = round(w * m)
@@ -161,6 +173,7 @@ def chaos_hprng(m: int, n: int, a: int, w: float = 0.01):
         random_numbers.append(x)
     return random_numbers
 
+
 def switch_prng(m, n, a, w=0.01):
     x = time.time_ns()
     worst_case_period = round(w * m)
@@ -171,6 +184,7 @@ def switch_prng(m, n, a, w=0.01):
         x = (n**2 + (x * a)) % (m + 1)
         random_numbers.append(x)
     return random_numbers
+
 
 def switch_shift_prng(m, n, a, w=0.01):
     x = time.time_ns()
@@ -185,6 +199,7 @@ def switch_shift_prng(m, n, a, w=0.01):
         random_numbers.append(x)
     return random_numbers
 
+
 def switch_mask_shift_prng(m, n, a, w=0.01):
     x = time.time_ns()
     worst_case_period = round(w * m)  # worst case period: 1% of m
@@ -195,6 +210,7 @@ def switch_mask_shift_prng(m, n, a, w=0.01):
         x = (n**2 + (x ^ a) << 5) % (m + 1)
         random_numbers.append(x)
     return random_numbers
+
 
 def hybrid_prng(m, n, a):
     x = time.time_ns()

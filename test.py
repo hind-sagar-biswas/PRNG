@@ -16,7 +16,7 @@ import algos.hprng as alg  # Hybrid PRNG algorithms
 import dbconn as db  # Database-related operations
 import visualize as vis  # Visualization functions
 import binaryGen as gen  # Binary file generation
-import compilattion as cmp  # Compilattion
+import compilation as cmp  # Compilattion
 import extern.collect as clct  # External Library tests
 
 # Load environment variables for configuration
@@ -39,15 +39,13 @@ Path(RESULTS_DIR + BIN_DIR).mkdir(parents=True, exist_ok=True)
 # Dictionary of algorithms with their respective functions
 algo_list = {
     "hybrid": alg.hybrid_prng,  # Hybrid PRNG
-    # "switch": alg.switch_prng,    # Switch-based PRNG
-    # "chprng": alg.tent_hybrid_3,  # Tent-based PRNG version 03
-    # "tent 4": alg.tent_hybrid_4,  # Tent-based PRNG version 04
-    # "tent 5": alg.tent_hybrid_5,  # Tent-based PRNG version 05
-    # "mt19937": alg.mt19937,  # Mersenne Twister
-    # "pcg": alg.pcg,  # PCG
-    # "xorshift128plus": alg.xorshift128plus,  # Xorshift128+
-    # "well512a": alg.well512a,  # Well512a
-    # "splitmix64": alg.splitmix64,  # Splitmix64
+    "switch": alg.switch_prng,  # Switch-based PRNG
+    "chprng": alg.tent_hybrid_3,  # Tent-based PRNG version 03
+    "mt19937": alg.mt19937,  # Mersenne Twister
+    "pcg": alg.pcg,  # PCG
+    "xorshift128plus": alg.xorshift128plus,  # Xorshift128+
+    "well512a": alg.well512a,  # Well512a
+    "splitmix64": alg.splitmix64,  # Splitmix64
 }
 
 
